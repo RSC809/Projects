@@ -55,4 +55,13 @@ SELECT COALESCE(product, product_code) AS product_info
 
 FROM `fourth-blend-376817.customer_data.customer_purchase`
 
+-- Change misspell with CASE statement
+
+SELECT customer_id CASE
+                      WHEN first_name = 'Tnoy' THEN 'Tony
+                      ELSE first_name
+                      END AS cleaned_name
+
+FROM `fourth-blend-376817.customer_data.customer_name`
+
 
