@@ -1,3 +1,5 @@
+-- Exploratory Analysis
+
 SELECT *
 FROM PortfolioProject..CovidDeaths
 ORDER BY 3,4
