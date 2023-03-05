@@ -1,0 +1,254 @@
+---
+title: "Data Analytics Fundamentals"
+author: "Ramberto"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Using Pipes to Filter, Arrange, Group by and Summarize Data
+
+```{r Installing Packages}
+install.packages("tidyverse")
+install.packages("dplyr")
+```
+
+```{r Loading Packages}
+library(tidyverse)
+library(dplyr)
+```
+
+```{r Loading Internal Dataset in R & Viewing it}
+data("ToothGrowth")
+View(ToothGrowth)
+```
+
+```{r Filtering data by dose}
+filtered_tg <- filter(ToothGrowth, dose==0.5)
+view(filtered_tg)
+```
+
+```{r arranging data by length, "len"}
+arrange(filtered_tg, len)
+```
+
+```{r Nested Funtion, Filtering and Arranging}
+arrange(filter(ToothGrowth, dose==0.5), len)
+```
+
+```{r Using Pipes, %>%, as an alternative to nested functions}
+filtered_ToothGrowth <- ToothGrowth %>% 
+  filter(dose==0.5) %>% 
+  arrange(len)
+View(filtered_ToothGrowth)
+```
+
+```{r Grouping By & Calculating Mean}
+filtered_ToothGrowth <- ToothGrowth %>% 
+  filter(dose==0.5) %>% 
+  group_by(supp) %>% 
+  summarize(mean_len = mean(len, na.rm = T), .groups = "drop")
+View(filtered_ToothGrowth)
+```
+
+# Working with Dataframes, Looking at structure, Columns, and Adding Columns 
+
+```{r Loaging ggplot2 Library}
+library(ggplot2)
+```
+
+```{r loading dataset in R internal database}
+data("diamonds")
+```
+
+```{r View Data at the top}
+head(diamonds)
+```
+
+```{r Looking at data structure}
+str(diamonds)
+```
+
+```{r Looking at data columns}
+colnames(diamonds)
+```
+
+```{r using mutate to add new columns, carat_2}
+mutate(diamonds, carat_2=carat*100)
+```
+
+# Cleaning up with the basics
+
+```{r Install Packages + Palmer Penguin dataset}
+install.packages("here")
+install.packages("skimr")
+install.packages("janitor")
+install.packages("palmerpenguins")
+```
+
+```{r Loading Packages + Palmer Penguins dataset}
+library("here")
+library("skimr")
+library("janitor")
+library("dplyr")
+library("palmerpenguins")
+```
+
+```{r Skim for comprehensive summary}
+skim_without_charts(penguins)
+```
+
+```{r glimplse to look at dataset}
+glimpse(penguins)
+```
+
+```{r head for preview of data}
+head(penguins)
+```
+ 
+```{r Selecting a column, species using a Pipe}
+penguins %>% 
+  select(species)
+```
+ 
+```{r Excluding a column, species, using a Pipe. Note the minus (-)}
+penguins %>% 
+  select(-species)
+```
+
+```{r Renaming a column name, using a Pipe}
+penguins %>% 
+  rename(island_new=island)
+```
+
+```{r Renaming columns, 'toupper' for upper case}
+rename_with(penguins, toupper)
+```
+
+```{r Renaming columns, 'tolower' for lower case}
+rename_with(penguins, tolower)
+```
+
+```{r clean_names() for consisting Naming, It make sure there are only characters, numbers, etc}
+clean_names(penguins)
+?clean_names()
+```
+
+# Organizing Data
+
+```{r Arranging data in ascending order}
+penguins %>% 
+  arrange(bill_length_mm)
+```
+
+```{r Arranging data in desscending order, note minus sign}
+penguins %>% 
+  arrange(-bill_length_mm)
+```
+
+```{r to save newly arrange dataset, create new variable}
+penguins2 <- penguins %>% 
+  arrange(-bill_length_mm)
+View(penguins2)
+```
+
+```{r Group data function + mean, drop_na is use to remove nulls}
+penguins %>% 
+  group_by(island) %>% 
+  drop_na() %>% 
+  summarize(mean_bill_length_mm=mean(bill_length_mm))
+```
+
+```{r Group data function + max, drop_na is use to remove nulls}
+penguins %>% 
+  group_by(island) %>% 
+  drop_na() %>% 
+  summarize(max_bill_length_mm=max(bill_length_mm))
+```
+
+```{r Group data by species and island + max and mean, drop_na is use to remove nulls}
+penguins %>% 
+  group_by(species, island) %>% 
+  drop_na() %>% 
+  summarize(max_bill_length_mm=max(bill_length_mm), mean_bill_length_mm=mean(bill_length_mm))
+```
+
+```{r Filter data by species function }
+penguins %>% 
+  filter(species=="Adelie") 
+```
+
+# Transforming data
+
+```{r Example, creating vectors and data frame}
+id <- c(1:10)
+name <- c("John Mendes", "Rob Stewart", "Rachel Abrahamson", "Christy Hickman", "Johnson Harper", "Firi Candace", "Sean Bean", "Luke Sky", "Albert Matte", "Ramberto Sosa")
+job_title <- c("Profesional", "Proggrammer", "Management", "Clerical", "Developer", "Programmer", "Management", "Clerical", "Developer", "Programmer")
+
+employee <- data.frame(id, name, job_title)
+print(employee)
+```
+
+```{r Separating string variables, name into first and last name, note the sep argument}
+employeesep <- separate(employee, name, into=c('first_name', 'last_name'), sep=' ')
+print(employeesep)
+```
+
+```{r Unite, Merging variables or Concatenating}
+unite(employeesep, 'name', first_name, last_name, sep=' ')
+```
+
+```{r Mutate function to create variables, new column body mass in kg and flipper length in m}
+penguins %>% 
+  mutate(body_mass_kg=body_mass_g/1000, flipper_length_m=flipper_length_mm/1000)
+```
+
+# Summarizing data
+
+```{r Install Packeges with dataset}
+install.packages("Tmisc")
+install.packages('datasauRus')
+```
+
+```{r Load Packages with dataset}
+library(Tmisc)
+library(datasauRus)
+```
+
+```{r Load data quartet}
+data("quartet")
+View(quartet)
+```
+
+```{r Summarizing Data, mean, standart deviation, correlation}
+quartet %>% 
+  group_by(set) %>% 
+  summarize(mean(x), sd(x), mean(y), sd(y), cor(x, y))
+```
+
+```{r Plotting Data}
+ggplot(quartet, aes(x,y)) + geom_point() + geom_smooth(method=lm, se=FALSE) + facet_wrap(~set)
+```
+
+```{r Plotting Data Example}
+ggplot(datasaurus_dozen, aes(x=x, y=y, colour=dataset)) + geom_point() + theme_void() + theme(legend.position = "none") + facet_wrap(~dataset)
+```
+
+# Bias
+
+```{r Install Packages for Bias}
+install.packages('SimDesign')
+```
+
+```{r Loading Packages}
+library('SimDesign')
+```
+
+```{r Create vectors for Bias Example}
+actual_temp <- c(68.3, 70, 72.4, 71, 67, 70)
+predict_temp <- c(67.9, 69, 71.5, 70, 67, 69 )
+```
+
+```{r Bias Function, in example bias is towards lower predictions}
+bias(actual_temp, predict_temp)
+```
+
