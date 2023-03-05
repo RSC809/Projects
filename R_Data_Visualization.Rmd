@@ -1,0 +1,210 @@
+---
+title: "R Data Visualization Basics"
+author: "Ramberto"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Aesthetics for points
+
+# ggpplot Packages and dataset 
+
+```{r Install Packages + Palmer Penguin dataset}
+install.packages("ggplot2")
+install.packages("palmerpenguins")
+```
+
+```{r Loading Packages + Palmer Penguins dataset}
+library("ggplot2")
+library("palmerpenguins")
+```
+
+# ggplot visualization - plus (+) signs is use to add layers to the plot; geom_point to create points to represent data; and mapping=aes refers to y and x axis, how the data will look. Mapping of the data
+
+```{r flipper length vs body mass plot}
+ggplot(data=penguins) + geom_point(mapping = aes(x=flipper_length_mm, y=body_mass_g))
+```
+
+# adding "colors" to the aesthetic (aes) to identify "species" in palmer penguins
+
+```{r flipper length vs body mass plot}
+ggplot(data=penguins) + geom_point(mapping = aes(x=flipper_length_mm, y=body_mass_g, color=species))
+```
+
+# adding "shapes" to the aesthetic (aes) to identify "species" in palmer penguins
+
+```{r flipper length vs body mass plot}
+ggplot(data=penguins) + geom_point(mapping = aes(x=flipper_length_mm, y=body_mass_g, shape=species))
+```
+
+# adding "colors" and "shapes" to the aesthetic (aes) to identify "species" in palmer penguins
+
+```{r flipper length vs body mass plot}
+ggplot(data=penguins) + geom_point(mapping = aes(x=flipper_length_mm, y=body_mass_g, shape=species, color=species))
+```
+
+# adding "size", "colors" and "shapes" to the aesthetic (aes) to identify "species" in palmer penguins
+
+```{r flipper length vs body mass plot}
+ggplot(data=penguins) + geom_point(mapping = aes(x=flipper_length_mm, y=body_mass_g, shape=species, color=species, size=species))
+```
+
+# using alpha with "species" to control transparency of data
+
+```{r flipper length vs body mass plot}
+ggplot(data=penguins) + geom_point(mapping = aes(x=flipper_length_mm, y=body_mass_g, alpha=species))
+```
+
+# changing color for all data points. 
+
+```{r flipper length vs body mass plot}
+ggplot(data=penguins) + geom_point(mapping = aes(x=flipper_length_mm, y=body_mass_g), color="purple")
+```
+
+## Geom Functions, point, bar, line etc...
+
+# geom_smooth
+
+```{r flipper length vs body mass plot}
+ggplot(data=penguins) + geom_smooth(mapping = aes(x=flipper_length_mm, y=body_mass_g))
+```
+
+# adding additional geoms 
+
+```{r flipper length vs body mass plot}
+ggplot(data=penguins) + geom_smooth(mapping = aes(x=flipper_length_mm, y=body_mass_g)) + geom_point(mapping = aes(x=flipper_length_mm, y=body_mass_g)) 
+```
+
+# adding line type to identify different species
+
+```{r flipper length vs body mass plot}
+ggplot(data=penguins) + geom_smooth(mapping = aes(x=flipper_length_mm, y=body_mass_g, linetype=species))
+```
+
+# using jitter function, to makes points easier to find when data overlaps
+
+```{r flipper length vs body mass plot}
+ggplot(data=penguins) + geom_jitter(mapping = aes(x=flipper_length_mm, y=body_mass_g))
+```
+
+# Bar Chart with Diamon data, When "y" axis isn't specify it automatically turns into COUNT (or Data Frenquency)
+
+```{r Plot Diamond Cut}
+ggplot(data=diamonds) + 
+  geom_bar(mapping = aes(x=cut))
+```
+
+# adding color to the cut
+
+```{r Plot Diamond Cut}
+ggplot(data=diamonds) + 
+  geom_bar(mapping = aes(x=cut, color=cut))
+```
+
+# using fill to add color inside bar for cut
+
+```{r Plot Diamond Cut}
+ggplot(data=diamonds) + 
+  geom_bar(mapping = aes(x=cut, fill=cut))
+```
+
+# using fill to add color inside bar for clarity. The result is a stacked bar identifying clarity inside cut bars to identify volume
+
+```{r Plot Diamond Cut}
+ggplot(data=diamonds) + 
+  geom_bar(mapping = aes(x=cut, fill=clarity))
+```
+
+## Using facets, to display smaller groups or subsets in data
+
+# facet_wrap function, using species
+
+```{r flipper length vs body mass plot}
+ggplot(data=penguins) + geom_point(mapping = aes(x=flipper_length_mm, y=body_mass_g, color=species)) + facet_wrap(~species)
+```
+
+# facet_wrap function, using cut from Diamond dataset
+
+```{r Plot Diamonds}
+ggplot(data=diamonds) + geom_bar(mapping=aes(x=color, fill=cut)) + facet_wrap(~cut)
+```
+
+# facet_grid function, using with penguins dataset. Must usefull when exploring relationship between multiple groups; sex and species
+
+```{r flipper length vs body mass plot}
+ggplot(data=penguins) + geom_point(mapping = aes(x=flipper_length_mm, y=body_mass_g, color=species)) + facet_grid(sex~species)
+```
+
+# using facet_grid to look at different species
+
+```{r flipper length vs body mass plot}
+ggplot(data=penguins) + geom_point(mapping = aes(x=flipper_length_mm, y=body_mass_g, color=species)) + facet_grid(~species)
+```
+
+# using facet_grid to look for sex
+
+```{r flipper length vs body mass plot}
+ggplot(data=penguins) + geom_point(mapping = aes(x=flipper_length_mm, y=body_mass_g, color=species)) + facet_grid(~sex)
+```
+
+## Labels & Annotations
+
+# adding title using labs
+
+```{r flipper length vs body mass plot}
+ggplot(data = penguins) + 
+  geom_point(mapping = aes(x = flipper_length_mm, y = body_mass_g, color = species)) +
+  labs(title = "Palmer Penguins: Body Mass vs. Flipper Length")
+```
+
+# adding subtitle and caption
+
+```{r flipper length vs body mass plot}
+ggplot(data = penguins) + 
+  geom_point(mapping = aes(x = flipper_length_mm, y = body_mass_g, color = species)) +
+  labs(title = "Palmer Penguins: Body Mass vs. Flipper Length", subtitle = "Sample of Three Penguin Species", caption="Data collected by Dr. Kristen Gorman")
+```
+
+# using annotate function, the location is specify using x and y axis values
+
+```{r flipper length vs body mass plot}
+ggplot(data = penguins) + 
+  geom_point(mapping = aes(x = flipper_length_mm, y = body_mass_g, color = species)) +
+  labs(title = "Palmer Penguins: Body Mass vs. Flipper Length", subtitle = "Sample of Three Penguin Species", caption="Data collected by Dr. Kristen Gorman") +
+  annotate("text", x=220, y=3500, label="The Gentoos are the largest")
+```
+
+# adding color, size and angle to annotations
+
+```{r flipper length vs body mass plot}
+ggplot(data = penguins) + 
+  geom_point(mapping = aes(x = flipper_length_mm, y = body_mass_g, color = species)) +
+  labs(title = "Palmer Penguins: Body Mass vs. Flipper Length", subtitle = "Sample of Three Penguin Species", caption="Data collected by Dr. Kristen Gorman") +
+  annotate("text", x=220, y=3500, label="The Gentoos are the largest", color="purple", fontface="bold", size=4.5, angle=0)
+```
+
+# saving plot. Usefull for adding layers. Example with annotations
+
+```{r saving chart in a variable}
+p <- ggplot(data = penguins) + 
+  geom_point(mapping = aes(x = flipper_length_mm, y = body_mass_g, color = species)) +
+  labs(title = "Palmer Penguins: Body Mass vs. Flipper Length", subtitle = "Sample of Three Penguin Species", caption="Data collected by Dr. Kristen Gorman")
+
+p + annotate("text", x=220, y=3500, label="The Gentoos are the largest", color="purple", fontface="bold", size=4.5, angle=0)
+```
+
+## Saving Visualizations
+
+```{r flipper length vs body mass plot}
+ggplot(data=penguins) + geom_point(mapping = aes(x=flipper_length_mm, y=body_mass_g, shape=species, color=species))
+```
+
+# using ggsave the last visual is save
+
+```{r}
+ggsave("Three Penguin Species.png")
+```
+
+
+
+
