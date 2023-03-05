@@ -1,6 +1,6 @@
 ---
 title: "Data Analytics Fundamentals"
-author: "Ramberto"
+author: "Ramberto Jr. Sosa Cueto"
 date: "`r Sys.Date()`"
 output: html_document
 ---
