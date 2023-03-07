@@ -1,0 +1,476 @@
+---
+title: 'Case Study: Cyclistic Bike Sharing Company'
+author: "Ramberto Jr Sosa Cueto"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Cyclistic Bike Sharing Company
+
+## Case Study Business Task
+
+The goal of the business task is to create a new marketing strategy that will turn occasional riders into annual subscribers for Cyclistic, a hypothetical company. The company's director of marketing believes that increasing the number of yearly subscriptions is crucial for the long-term success of the company. To achieve this goal, my marketing analyst team, also hypothetical, must understand why casual riders would want to become members, and how annual members use Cyclistic bikes differently from occasional riders.
+To gain insights that can guide the development of the new marketing strategy, we plan to analyze past bike trip data from Cyclistic. Our aim is to identify patterns and insights that can help us produce compelling data visualizations and expert insights. These visualizations and insights will be used to convince Cyclistic's management to approve the new marketing strategy.
+
+```{r Clear Environment}
+rm(list=ls()) # Caution: this clears the Environment
+```
+
+
+## Preparing Data
+
+#### Data Sources & Description
+
+The primary data source for this project is historical bicycle trip data from Cyclistic, which can be downloaded via the provided link, https://divvy-tripdata.s3.amazonaws.com/index.html. The dataset includes information about bike trips taken in the past 12 months, such as:
+• Ride ID
+• Rideable type
+• Trip, start time (Include Date and Time in one cell)
+• Trip, end time (Include Date and Time in one cell)
+• Trip start station name
+• Start station ID
+• Trip end station name
+• End station ID
+• Start Latitude
+• Start Longitude
+• End Latitude
+• End Longitude
+
+## Data cleaning, Transformation & Manipulation
+
+#### Loading Data Cleaning Libraries 
+
+```{r # 1}
+library(tidyverse)
+library(dplyr)
+library(readr)
+library(lubridate) 
+library(ggplot2)
+```
+
+
+#### Opening csv files containing dataset with readr
+
+```{r # 2}
+table_1 <- "/Users/RambertoJr/Desktop//untitled folder/202202-divvy-tripdata.csv"
+cyclistic_data2202 <- read_csv(table_1)
+head(cyclistic_data2202)
+```
+
+```{r # 3}
+table_2 <- "/Users/RambertoJr/Desktop//untitled folder/202203-divvy-tripdata.csv"
+cyclistic_data2203 <- read_csv(table_2)
+table_3 <- "/Users/RambertoJr/Desktop//untitled folder/202204-divvy-tripdata.csv"
+cyclistic_data2204 <- read_csv(table_3)
+table_4 <- "/Users/RambertoJr/Desktop//untitled folder/202205-divvy-tripdata.csv"
+cyclistic_data2205 <- read_csv(table_4)
+table_5 <- "/Users/RambertoJr/Desktop//untitled folder/202206-divvy-tripdata.csv"
+cyclistic_data2206 <- read_csv(table_5)
+table_6 <- "/Users/RambertoJr/Desktop//untitled folder/202207-divvy-tripdata.csv"
+cyclistic_data2207 <- read_csv(table_6)
+table_7 <- "/Users/RambertoJr/Desktop//untitled folder/202208-divvy-tripdata.csv"
+cyclistic_data2208 <- read_csv(table_7)
+table_8 <- "/Users/RambertoJr/Desktop//untitled folder/202209-divvy-tripdata.csv"
+cyclistic_data2209 <- read_csv(table_8)
+table_9 <- "/Users/RambertoJr/Desktop//untitled folder/202210-divvy-tripdata.csv"
+cyclistic_data2210 <- read_csv(table_9)
+table_10 <- "/Users/RambertoJr/Desktop//untitled folder/202211-divvy-tripdata.csv"
+cyclistic_data2211 <- read_csv(table_10)
+table_11 <- "/Users/RambertoJr/Desktop//untitled folder/202212-divvy-tripdata.csv"
+cyclistic_data2212 <- read_csv(table_11)
+table_12 <- "/Users/RambertoJr/Desktop//untitled folder/202301-divvy-tripdata.csv"
+cyclistic_data2301 <- read_csv(table_12)
+```
+
+
+#### Merging all the seperate months into a table, 22-02 to 23-01, with rbind
+
+```{r # 4}
+cyclistic_data_raw <- rbind(cyclistic_data2202, cyclistic_data2203, cyclistic_data2204, cyclistic_data2205, cyclistic_data2206, cyclistic_data2207, cyclistic_data2208, cyclistic_data2209, cyclistic_data2210, cyclistic_data2211, cyclistic_data2212, cyclistic_data2301)
+```
+
+
+#### Looking at the data
+
+```{r View Data Sample at the top}
+head(cyclistic_data_raw)
+```
+
+```{r Looking at data structure}
+str(cyclistic_data_raw)
+```
+
+The total number of rows is 5,754,248. And Total number of 13
+
+```{r Looking at data columns}
+colnames(cyclistic_data_raw)
+```
+
+
+#### Removing duplicates
+
+```{r using distinct funciton}
+cyclistic_data_nodup <- cyclistic_data_raw %>% 
+  distinct()
+```
+
+```{r data structure}
+str(cyclistic_data_nodup)
+```
+
+Data Doesn't have duplicates
+
+
+#### Checking for Misspells
+
+```{r 1. Using group by function in every column with strings}
+cyclistic_data_raw %>%
+  group_by(rideable_type) %>%
+  summarize(count = n()) %>%
+  arrange(desc(count))
+
+cyclistic_data_raw %>%
+  group_by(start_station_name, start_station_id) %>%
+  summarize(count = n()) %>%
+  arrange(start_station_name)
+
+cyclistic_data_raw %>%
+  group_by(member_casual) %>%
+  summarize(count = n()) %>%
+  arrange(desc(count))
+
+cyclistic_data_raw %>%
+  group_by(end_station_name, end_station_id) %>%
+  summarize(count = n()) %>%
+  arrange(end_station_name)
+
+```
+
+```{r 2. Using group by function in every column with strings}
+cyclistic_data_raw %>%
+  group_by(start_station_name, start_station_id) %>%
+  summarize(count = n()) %>%
+  arrange(desc(count))
+
+cyclistic_data_raw %>%
+  group_by(end_station_name, end_station_id) %>%
+  summarize(count = n()) %>%
+  arrange(desc(count))
+
+```
+
+The Dataset contain 843525 rows with null values for start_station_name and start_station_id and 902655 rows with null values for end_station_name and end_station_id
+
+
+#### Filling out nulls using latitude and longitude as reference
+
+```{r First we concadenate longitude and latitude into new colwumns}
+cyclistic_data_raw <- cyclistic_data_raw %>%
+  unite("start_lat_lng", c(start_lat, start_lng), sep = " ") %>%
+  unite("end_lat_lng", c(end_lat, end_lng), sep = " ")
+```
+
+```{r Fill the blanks in start_station_name with start_lat_lng using grepl() function}
+cyclistic_data_raw$new_start_station_name <- ifelse(
+  is.na(cyclistic_data_raw$start_station_name),
+  sub(".*- (.*) /.*", "\\1", cyclistic_data_raw$start_lat_lng),
+  cyclistic_data_raw$start_station_name
+)
+```
+
+```{r Fill the blanks in end_station_name with end_lat_lng using grepl() function}
+cyclistic_data_raw$new_end_station_name <- ifelse(
+  is.na(cyclistic_data_raw$end_station_name),
+  sub(".*- (.*) /.*", "\\1", cyclistic_data_raw$end_lat_lng),
+  cyclistic_data_raw$start_station_name
+)
+```
+
+
+#### Looking at the data
+
+```{r View Data}
+head(cyclistic_data_raw)
+```
+
+```{r using group by function in every column with strings, order by frenquency}
+cyclistic_data_raw %>%
+  group_by(new_start_station_name, start_station_id) %>%
+  summarize(count = n()) %>%
+  arrange(desc(count))
+
+cyclistic_data_raw %>%
+  group_by(new_end_station_name, end_station_id) %>%
+  summarize(count = n()) %>%
+  arrange(desc(count))
+```
+
+
+#### Creating new variables day_of_week to indicate the start date, trip_duration to indicate the length, trip_station_names to indicate the trip and day_time to indicate day time
+
+```{r day_of_weak}
+cyclistic_data_raw <- cyclistic_data_raw %>%
+  mutate(day_of_week = weekdays(as.Date(started_at)))
+```
+
+```{r trip_station_names}
+cyclistic_data_raw <- cyclistic_data_raw %>%
+  unite("trip_station_names", c(new_start_station_name, new_end_station_name), sep = "-") 
+```
+
+```{r trip_duration calculation}
+cyclistic_data_raw <- cyclistic_data_raw %>%
+  mutate(started_at = ymd_hms(started_at),
+         ended_at = ymd_hms(ended_at),
+         trip_duration = difftime(ended_at, started_at, units = "mins"))
+```
+
+```{r day_time}
+cyclistic_data_raw <- cyclistic_data_raw %>%
+  mutate(daytime_start = case_when(
+    hour(started_at) < 12 ~ "morning",
+    hour(started_at) < 18 ~ "afternoon",
+    TRUE ~ "night"
+  ),
+  daytime_end = case_when(
+    hour(ended_at) < 12 ~ "morning",
+    hour(ended_at) < 18 ~ "afternoon",
+    TRUE ~ "night"
+  )
+)
+```
+
+```{r View Data at the top}
+head(cyclistic_data_raw)
+```
+
+```{r Viewing Data arranging trip duration}
+cyclistic_data_1 <- cyclistic_data_raw %>% 
+  arrange(trip_duration)
+head(cyclistic_data_1)
+```
+
+The Data shows that there are trips with negative durations
+
+```{r Removind data with negative trip duration}
+cyclistic_data_filtered <- cyclistic_data_raw %>% 
+  filter(trip_duration >= 0)
+str(cyclistic_data_filtered)
+head(cyclistic_data_filtered)
+```
+
+A total of 5,754,148 rows are left out of 5,754,248. Only a 100 rows had negative duration.
+
+
+
+## Exploratory Analysis
+
+To find the difference between member and casual in member_casual, we can group the data by member_casual and perform a couple of statistics. The analysis involves the 5,754,248 observations.
+
+#### Boxplot showing the distribution of trip duration by member/casual:
+
+```{r Box Plot}
+cyclistic_data_filtered %>%
+  ggplot(aes(x = member_casual, y = trip_duration/60, fill = member_casual)) +
+  geom_boxplot() +
+  ggtitle("Distribution of Trip Duration by Member/Casual") +
+  xlab("Member/Casual") +
+  ylab("Trip Duration (minutes)") +
+  theme_minimal()
+```
+
+#### Member vs Casual: Rides Total Sample
+
+```{r Member vs Casual}
+cyclistic_data_filtered %>%
+  count(member_casual) %>%
+  mutate(percent = n/sum(n) * 100)
+```
+
+
+#### Member vs Causal: Trips Duration in Minutes
+
+```{r Member vs Casual: Trip Duration}
+cyclistic_data_filtered %>%
+    group_by(member_casual) %>%
+  summarize(mean_trip_duration = mean(trip_duration))
+```
+
+
+#### Member vs Casual: Rides by Rideable Type & Trip Duration
+
+```{r Member vs Casual: Rideable Type & Trip Duration}
+cyclistic_data_filtered %>%
+  group_by(member_casual, rideable_type) %>%
+  summarise(trip_count = n(), 
+            avg_trip_duration = mean(trip_duration, na.rm = TRUE)) %>%
+  arrange(member_casual, desc(trip_count))
+```
+
+
+#### Member vs Casual: Rides by Day of the Week
+
+```{r Member vs Casual: Da}
+cyclistic_data_filtered %>%
+  group_by(member_casual, day_of_week) %>%
+  summarise(trip_count = n(), 
+            avg_trip_duration = mean(trip_duration, na.rm = TRUE)) %>%
+  arrange(member_casual, desc(trip_count))
+```
+
+
+#### Member vs Casual: Rides by Daytime
+
+```{r Member vs Casual: daytime_start}
+cyclistic_data_filtered %>%
+  group_by(member_casual, daytime_start, day_of_week) %>%
+  summarise(trip_count = n(), 
+            avg_trip_duration = mean(trip_duration, na.rm = TRUE)) %>%
+  arrange(member_casual,desc(trip_count))
+```
+
+
+#### Member vs Casual: Rides by Daytime & Day of the Week
+
+```{r Member vs Casual: daytime_start & day_of_week}
+cyclistic_data_filtered %>%
+  group_by(member_casual, daytime_start, day_of_week) %>%
+  summarise(trip_count = n(), 
+            avg_trip_duration = mean(trip_duration, na.rm = TRUE)) %>%
+  arrange(member_casual,desc(trip_count))
+```
+
+
+#### Member vs Casual: Rides by Start Station Name
+
+```{r Member vs Casual: Start Station}
+cyclistic_data_filtered %>%
+  group_by(member_casual, start_station_name) %>%
+  summarise(trip_count = n(), 
+            avg_trip_duration = mean(trip_duration, na.rm = TRUE)) %>%
+  arrange(desc(trip_count))
+```
+
+
+## Data Vialization
+
+#### Create a new column with month-year format
+
+```{r Data maniputaltion to aggregate years}
+cyclistic_data_filtered$date <- format(as.Date(cyclistic_data_filtered$started_at), "%Y-%m")
+```
+
+
+#### Group data by month-year and member_casual, and count the number of rides
+
+```{r Group data by Month0year and Member_casual}
+rides_per_month <- cyclistic_data_filtered %>%
+  group_by(date, member_casual) %>%
+  summarise(num_rides = n())
+```
+
+
+#### Plot the number of rides by month-year
+
+```{r plot data by year}
+ggplot(rides_per_month, aes(x = date, y = num_rides, fill = member_casual)) +
+  geom_col() +
+  labs(x = "Month-Year", y = "Number of Rides", fill = "User Type") +
+  scale_fill_manual(values = c("#0099FF", "#FF6600")) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  geom_text(aes(label = format(num_rides, big.mark = ",")), position = position_stack(vjust = 0.5), size = 3.5)
+```
+
+#### Stacked bar chart showing the number of rides per day of the week:
+
+```{r Stacked Bar}
+cyclistic_data_filtered %>%
+  count(day_of_week, member_casual, sort = TRUE) %>%
+  mutate(n = scales::comma(n)) %>%
+  ggplot(aes(x = factor(day_of_week, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")), y = n, fill = member_casual)) +
+  geom_col(position = "stack") +
+  geom_text(aes(label = n, group = member_casual), 
+            position = position_stack(vjust = 0.5), 
+            size = 3, 
+            fontface = "bold") +
+  ggtitle("Number of Rides per Day of Week and Member/Casual") +
+  xlab("Day of Week") +
+  ylab("Number of Rides") +
+  theme_minimal()
+```
+
+
+#### This create plots for rideable type
+
+#### Create a bar plot to show the difference in trip count by rideable type
+
+```{r Bar Plot}
+rideable_type_plot <- cyclistic_data_filtered %>%
+  group_by(member_casual, rideable_type) %>%
+  summarise(trip_count = n(), 
+            avg_trip_duration = mean(trip_duration, na.rm = TRUE)) %>%
+  ungroup() %>%
+  arrange(desc(-trip_count))
+
+ggplot(rideable_type_plot, aes(x = factor(rideable_type, levels = c("docked_bike", "classic_bike", "electric_bike")), y = trip_count, fill = member_casual)) +
+  geom_col(position = "dodge") +
+  labs(title = "Difference in Trip Count by Rideable Type", x = "Rideable Type", y = "Trip Count", fill = "Member/Casual") +
+  geom_text(aes(label = trip_count), position = position_dodge(width = 1), vjust = -0.5)
+```
+
+
+#### This shows how to create plots for daytime start
+
+#### Create a bar plot to show the difference in trip count by daytime start
+
+```{r Bar Plot 2}
+daytime_start_plot <- cyclistic_data_filtered %>%
+  group_by(member_casual, daytime_start) %>%
+  summarise(trip_count = n(), 
+            avg_trip_duration = mean(trip_duration, na.rm = TRUE)) %>%
+  ungroup()  %>%
+  arrange(desc(trip_count))
+
+ggplot(daytime_start_plot, aes(x = daytime_start, y = trip_count, fill = member_casual)) +
+  geom_col(position = "dodge") +
+  labs(title = "Difference in Trip Count by Daytime Start", x = "Daytime Start", y = "Trip Count", fill = "Member/Casual") +
+  geom_text(aes(label = trip_count), position = position_dodge(width = 1), vjust = -0.5)
+```
+
+
+#### Group and summarise the data by start station name and member/casual status
+
+#### Sort the data by total trip count for each station
+
+#### Limit the data to the top stations based on the number of trips
+
+#### Filter the original data to include only the top stations
+
+#### Accounting for nulls
+
+```{r Accounting for Nulls}
+cyclistic_data_filtered %>%
+  filter(!is.na(start_station_name)) %>%
+  group_by(member_casual, start_station_name) %>%
+  summarise(trip_count = n(), 
+            avg_trip_duration = mean(trip_duration, na.rm = TRUE)) %>%
+  arrange(desc(-trip_count)) %>%
+  top_n(8, trip_count) %>%
+  ggplot(aes(x = trip_count, y = start_station_name, fill = member_casual)) +
+  geom_col(position = "stack") +
+  scale_fill_manual(values = c("#0099FF", "#FF6600")) +
+  labs(title = "Trip count and average duration by top start station by rides vs member/casual",
+       x = "Trip count", y = "") +
+  theme_minimal() +
+  geom_label(aes(label=format(trip_count, big.mark=",")), position = position_stack(vjust = 0.5))
+```
+
+
+## Recommendations Base on the Analysis
+
+Based on the key points, here are the top three recommendations for Cyclistic to design a new marketing strategy to convert casual riders into annual members:
+Offer discounts: Provide discounts to encourage casual riders to become annual members. Since casual riders use the bikes for longer periods, offering them a discount on the annual membership could be a cost-effective way to incentivize them to switch to an annual membership.
+Promote benefits of annual membership: Highlight the benefits of annual membership, such as cheaper fares, to persuade casual riders to become annual members. Cyclistic could use various marketing channels, such as email campaigns and social media, to educate casual riders about the benefits of annual membership and why it makes sense to switch.
+Target busiest days and stations: Since Sundays and Mondays are the days when casual riders use the bikes the most, Cyclistic could
+target these days with a special promotion or discount for annual membership sign-ups. Similarly, since the busiest stations are used most by casual riders, Cyclistic could target these stations with promotional offers that encourage casual riders to upgrade to an annual membership.
+
+Overall, the focus should be on providing attractive incentives for casual riders to become annual members, while also highlighting the benefits of annual membership and targeting the busiest days and stations with promotional offers.
