@@ -9,9 +9,17 @@ output: html_document
 rm(list=ls()) # Caution: this clears the Environment
 ```
 # Introduction
-The goal of this project is to create a regression model that accurately predicts residential property sale prices based on factors such as lot size, neighborhood, and number of bedrooms. The dataset comes from Kaggle's House Prices: Advanced Regression Techniques competition and contains 79 explanatory variables as well as a target variable, SalePrice.
+The goal of this project is to create a regression model that accurately predicts residential property sale 
+prices based on factors such as lot size, neighborhood, and number of bedrooms. 
+The dataset comes from Kaggle's House Prices: Advanced Regression Techniques competition and contains 
+79 explanatory variables as well as a target variable, SalePrice.
+
 # Data Description
-The dataset is divided into two files, train.csv and test.csv, each with 1460 and 1459 observations. The target variable, SalePrice, is included in the training set, as are 79 explanatory variables that describe various aspects of each property. The test set contains the same variables as the test dataset, but without the target variable. The variables are described in the data dictionary provided by Kaggle.
+The dataset is divided into two files, train.csv and test.csv, each with 1460 and 1459 observations. 
+The target variable, SalePrice, is included in the training set, as are 79 explanatory variables 
+that describe various aspects of each property. The test set contains the same variables as the test dataset, 
+but without the target variable. The variables are described in the data dictionary provided by Kaggle.
+
 # Exploratory Data Analysis
 ## Load required packages
 ```{r}
@@ -33,12 +41,13 @@ test <- read.csv("test.csv", header = TRUE, stringsAsFactors = FALSE)
 str(train)
 str(test)
 ```
-###The 5 most important highlights of the data structure for train and test are:
+### The 5 most important highlights of the data structure for train and test are:
 The train dataset has 1460 observations and 81 variables, whereas the test dataset has 1459 observations and 80 variables. The variable 'SalePrice' is missing in the test dataset.
 The variables in the datasets have a mix of data types, including numerical, categorical, and ordinal.
 The datasets have missing values in some of the variables, and some of the categorical variables have NaN values which indicate the absence of a particular feature.
 Some of the variables have a skewed distribution, which means they are not normally distributed.
 The datasets contain many categorical variables that may need to be encoded using techniques such as one-hot encoding or label encoding before they can be used in machine learning algorithms.
+
 ## View summary statistics of target variable (SalePrice)
 ```{r}
 summary(train$SalePrice)
