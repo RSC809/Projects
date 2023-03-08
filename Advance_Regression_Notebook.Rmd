@@ -1,0 +1,238 @@
+---
+title: "The House Prices: Advanced Regression Techniques"
+author: "Ramberto Jr Sosa Cueto"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r Clear Environment}
+rm(list=ls()) # Caution: this clears the Environment
+```
+# Introduction
+The goal of this project is to create a regression model that accurately predicts residential property sale prices based on factors such as lot size, neighborhood, and number of bedrooms. The dataset comes from Kaggle's House Prices: Advanced Regression Techniques competition and contains 79 explanatory variables as well as a target variable, SalePrice.
+# Data Description
+The dataset is divided into two files, train.csv and test.csv, each with 1460 and 1459 observations. The target variable, SalePrice, is included in the training set, as are 79 explanatory variables that describe various aspects of each property. The test set contains the same variables as the test dataset, but without the target variable. The variables are described in the data dictionary provided by Kaggle.
+# Exploratory Data Analysis
+## Load required packages
+```{r}
+library(tidyverse)    # for data manipulation and visualization
+library(ggplot2)      # for data visualization
+library(corrplot)     # for correlation matrix visualization
+library(GGally)
+library(caret)
+library(randomForest)
+library(scales)
+```
+## Load data
+```{r}
+train <- read.csv("train.csv", header = TRUE, stringsAsFactors = FALSE)
+test <- read.csv("test.csv", header = TRUE, stringsAsFactors = FALSE)
+```
+## View data structure
+```{r}
+str(train)
+str(test)
+```
+###The 5 most important highlights of the data structure for train and test are:
+The train dataset has 1460 observations and 81 variables, whereas the test dataset has 1459 observations and 80 variables. The variable 'SalePrice' is missing in the test dataset.
+The variables in the datasets have a mix of data types, including numerical, categorical, and ordinal.
+The datasets have missing values in some of the variables, and some of the categorical variables have NaN values which indicate the absence of a particular feature.
+Some of the variables have a skewed distribution, which means they are not normally distributed.
+The datasets contain many categorical variables that may need to be encoded using techniques such as one-hot encoding or label encoding before they can be used in machine learning algorithms.
+## View summary statistics of target variable (SalePrice)
+```{r}
+summary(train$SalePrice)
+```
+### Train Sale Price Summary
+According to the summary, the sale price of houses in the training data ranges from $34,900 to $755,000. The median sale price is $163,000, implying that half of the houses sold for less and half sold for more. The median sale price is slightly higher at $180,921, indicating that the price distribution is skewed to the right, with some houses selling for far more than the median. The first quartile sale price is $129,975, indicating that 25% of the houses sold for less, while the third quartile sale price is $214,000, indicating that 75% of the houses sold for less.
+## Histogram of SalePrice
+```{r}
+ggplot(train, aes(x = SalePrice)) + 
+  geom_histogram(binwidth = 5000) + 
+  ggtitle("Distribution of SalePrice") +
+  xlab("SalePrice") + ylab("Count") +
+  scale_x_continuous(labels = scales::comma)
+```
+### Histogram Interpretation
+The ggplot results confirm that the majority of houses in the training data sold for less than $300,000. The histogram shows a peak in frequency around $150,000, which aligns with the median sale price of $163,000. The graph also confirms that the sale price distribution is skewed to the right, as indicated by the summary statistics.
+## QQ-plot of SalePrice
+```{r}
+ggplot(train, aes(sample = SalePrice)) +
+  stat_qq() +
+  stat_qq_line() +
+  ggtitle("Normal Probability Plot of SalePrice") +
+  xlab("Theoretical Quantiles") +
+  ylab("Sample Quantiles") +
+  scale_y_continuous(labels = scales::comma)
+```
+### QQ-Plot interpretation
+The qqplot demonstrates that the price distribution deviates from normality. The points deviate from the straight qqline, with the tails deviating significantly. This means that the sale prices of the houses in the dataset are not normally distributed, which can affect the results of any statistical analysis.
+## Log-transform SalePrice
+```{r}
+train$SalePrice <- log(train$SalePrice)
+```
+## Scatterplot matrix of numerical variables
+```{r}
+num_vars <- c("SalePrice", "LotArea", "OverallQual", "OverallCond", "YearBuilt")
+train %>%
+  select(num_vars) %>%
+  ggpairs()
+```
+### Scatter Plox Interpretation
+The scatter plots in ggpairs() show the relationship between the selected numeric variables. The diagonal plots show the distribution of each variable. The correlation matrix shows the correlation coefficients between each pair of variables. It seems that SalePrice has a strong positive correlation with OverallQual (OverallQuality) and YearBuilt (Year Built), while it has a moderate positive correlation with LotArea. OverallQual and YearBuilt also show a positive correlation. The OverallCond (Overall Condition) variable shows no clear correlation with any other variable.
+## Correlation matrix of numerical variables
+```{r}
+corr_matrix <- cor(train[num_vars])
+corrplot(corr_matrix, method = "circle", type = "upper", tl.col = "black", tl.srt = 45)
+```
+### Correlation Matrix interpretation
+The correlation matrix computes the relationship between two numerical variables in the train dataset. The matrix has a value between -1 and 1, with -1 representing a perfect negative correlation, 0 representing no correlation, and 1 representing a perfect positive correlation. The stronger the correlation between the variables, the darker the shade of blue. The plot shows that SalePrice has a strong positive correlation with OverallQual and YearBuilt, but a weak correlation with LotArea and OverallCond.
+
+## Boxplots of categorical variables
+```{r}
+cat_vars <- c("Neighborhood", "BldgType", "ExterQual", "BsmtQual", "KitchenQual")
+train %>%
+  gather(key = "variable", value = "value", cat_vars) %>%
+  ggplot(aes(x = variable, y = SalePrice, fill = value)) + 
+  geom_boxplot() + 
+  ggtitle("Relationship between SalePrice and categorical variables") +
+  xlab("Variable") + ylab("SalePrice") + 
+  theme(legend.position = "bottom")
+```
+### Boxplot Inpterpretation
+This code generates boxplots to demonstrate the relationship between the sale price and categorical variables. The categorical variables used are neighborhood, building type, exterior quality, basement quality, and kitchen quality. Each boxplot depicts the price distribution for a specific categorical variable value.
+The boxes show the distribution of sale prices for each category, with the bottom and top of the box representing the first and third quartiles, respectively. The middle line inside the box represents the median. The whiskers extend to 1.5 times the interquartile range (IQR), while the dots beyond the whiskers represent the outliers.
+# Data Cleaning and Preprocessing 
+# Combine train and test datasets
+```{r}
+all_data <- bind_rows(train, test)
+```
+## Identify missing values
+```{r}
+missing_values <- all_data %>%
+  select_if(~any(is.na(.))) %>%
+  summarize_all(funs(sum(is.na(.)), mean(is.na(.)) * 100))
+```
+## Drop variables with more than 40% missing values
+```{r}
+all_data <- all_data %>%
+  select(-c("PoolQC", "MiscFeature", "Alley", "Fence"))
+```
+## Impute missing values in numerical variables with median
+```{r}
+all_data <- all_data %>% 
+  mutate_if(~ is.numeric(.) & any(is.na(.)), as.double)
+
+all_data[num_vars] <- all_data[num_vars] %>%
+  replace_na(list(
+    OverallQual = median(all_data$OverallQual, na.rm = TRUE),
+    YearBuilt = median(all_data$YearBuilt, na.rm = TRUE),
+    YearRemodAdd = median(all_data$YearRemodAdd, na.rm = TRUE),
+    MasVnrArea = median(all_data$MasVnrArea, na.rm = TRUE),
+    BsmtFinSF1 = median(all_data$BsmtFinSF1, na.rm = TRUE),
+    BsmtFinSF2 = median(all_data$BsmtFinSF2, na.rm = TRUE),
+    BsmtUnfSF = median(all_data$BsmtUnfSF, na.rm = TRUE),
+    TotalBsmtSF = median(all_data$TotalBsmtSF, na.rm = TRUE),
+    `1stFlrSF` = median(all_data$`1stFlrSF`, na.rm = TRUE),
+    `2ndFlrSF` = median(all_data$`2ndFlrSF`, na.rm = TRUE),
+    LowQualvieFinSF = median(all_data$LowQualFinSF, na.rm = TRUE),
+    GrLivArea = median(all_data$GrLivArea, na.rm = TRUE),
+    BsmtFullBath = median(all_data$BsmtFullBath, na.rm = TRUE),
+    BsmtHalfBath = median(all_data$BsmtHalfBath, na.rm = TRUE),
+    FullBath = median(all_data$FullBath, na.rm = TRUE),
+    HalfBath = median(all_data$HalfBath, na.rm = TRUE),
+    BedroomAbvGr = median(all_data$BedroomAbvGr, na.rm = TRUE),
+    KitchenAbvGr = median(all_data$KitchenAbvGr, na.rm = TRUE),
+    TotRmsAbvGrd = median(all_data$TotRmsAbvGrd, na.rm = TRUE),
+    Fireplaces = median(all_data$Fireplaces, na.rm = TRUE),
+    GarageYrBlt = median(all_data$GarageYrBlt, na.rm = TRUE),
+    GarageCars = median(all_data$GarageCars, na.rm = TRUE),
+    GarageArea = median(all_data$GarageArea, na.rm = TRUE),
+    WoodDeckSF = median(all_data$WoodDeckSF, na.rm = TRUE),
+    OpenPorchSF = median(all_data$OpenPorchSF, na.rm = TRUE),
+    EnclosedPorch = median(all_data$EnclosedPorch, na.rm = TRUE),
+    `3SsnPorch` = median(all_data$`3SsnPorch`, na.rm = TRUE)
+  ))
+
+
+```
+# Feature Engineering and Selection
+## Total square footage
+```{r}
+all_data$TotalSF <- all_data$GrLivArea + all_data$TotalBsmtSF
+```
+## Age of the property at time of sale
+```{r}
+all_data$Age <- all_data$YrSold - all_data$YearBuilt
+```
+## Total number of bathrooms
+```{r}
+all_data$TotalBath <- all_data$FullBath + (0.5 * all_data$HalfBath) + all_data$BsmtFullBath + (0.5 * all_data$BsmtHalfBath)
+```
+## Total porch area
+```{r}
+all_data$TotalPorchSF <- all_data$OpenPorchSF + all_data$EnclosedPorch + all_data$`X3SsnPorch` + all_data$ScreenPorch
+```
+## Create dummy variables for categorical features***
+```{r}
+all_data <- all_data %>%
+  select(Id, MSSubClass, OverallQual, OverallCond, MoSold, YrSold, GarageYrBlt, BedroomAbvGr, KitchenAbvGr, SalePrice) %>%
+  mutate_at(vars(-SalePrice), as.factor) %>%
+  mutate_if(is.factor, as.numeric) %>%
+  select(-Id) %>%
+  mutate(SalePrice = log1p(SalePrice))
+```
+## Feature scaling
+```{r}
+num_vars <- all_data %>%
+  select_if(is.numeric) %>%
+  colnames() %>%
+  setdiff("SalePrice")
+all_data[num_vars] <- all_data[num_vars] %>%
+  scale() %>%
+  as.data.frame()
+```
+## Split data back into train and test datasets
+```{r}
+train <- all_data[1:nrow(train), ]
+test <- all_data[(nrow(train) + 1):nrow(all_data), ]
+```
+## Drop SalePrice from test dataset
+```{r}
+test$SalePrice <- NULL
+```
+## Create correlation matrix
+```{r}
+cor_mat <- cor(train)
+corrplot(cor_mat, method = "color", type = "upper", tl.cex = 0.7)
+```
+### Correlation Matrix interpretation
+The correlation matrix indicates the relationship between two numerical variables in the train dataset using a value between -1 and 1. A darker shade of blue suggests a stronger correlation between the variables, with -1 representing a perfect negative correlation, 0 representing no correlation, and 1 representing a perfect positive correlation.
+
+# Modeling and Evaluation
+## Define cross-validation method
+```{r}
+ctrl <- trainControl(method="cv", number=5, verboseIter=FALSE)
+```
+## Train a random forest model
+```{r}
+rf_model <- train(SalePrice ~ ., data=train, method="rf", trControl=ctrl, 
+                  ntree=500, importance=TRUE)
+```
+## Predict on the test set using the trained model
+```{r}
+test_pred <- predict(rf_model, newdata=test)
+```
+### Revert log transformation for test_pred
+```{r}
+test_pred_values <- exp(test_pred)
+```
+
+```{r}
+# Example vector
+my_vector <- test_pred_values
+
+# Write to CSV file
+write.csv(my_vector, file = "my_vector.csv", row.names = FALSE)
+```
+
