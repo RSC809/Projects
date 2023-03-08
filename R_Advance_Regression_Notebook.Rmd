@@ -13,13 +13,11 @@ The goal of this project is to create a regression model that accurately predict
 prices based on factors such as lot size, neighborhood, and number of bedrooms. 
 The dataset comes from Kaggle's House Prices: Advanced Regression Techniques competition and contains 
 79 explanatory variables as well as a target variable, SalePrice.
-
 # Data Description
 The dataset is divided into two files, train.csv and test.csv, each with 1460 and 1459 observations. 
 The target variable, SalePrice, is included in the training set, as are 79 explanatory variables 
 that describe various aspects of each property. The test set contains the same variables as the test dataset, 
 but without the target variable. The variables are described in the data dictionary provided by Kaggle.
-
 # Exploratory Data Analysis
 ## Load required packages
 ```{r}
@@ -42,18 +40,25 @@ str(train)
 str(test)
 ```
 ### The 5 most important highlights of the data structure for train and test are:
-The train dataset has 1460 observations and 81 variables, whereas the test dataset has 1459 observations and 80 variables. The variable 'SalePrice' is missing in the test dataset.
+The train dataset has 1460 observations and 81 variables, whereas the test dataset has 1459 observations 
+and 80 variables. The variable 'SalePrice' is missing in the test dataset.
 The variables in the datasets have a mix of data types, including numerical, categorical, and ordinal.
-The datasets have missing values in some of the variables, and some of the categorical variables have NaN values which indicate the absence of a particular feature.
+The datasets have missing values in some of the variables, and some of the categorical variables have 
+NaN values which indicate the absence of a particular feature.
 Some of the variables have a skewed distribution, which means they are not normally distributed.
-The datasets contain many categorical variables that may need to be encoded using techniques such as one-hot encoding or label encoding before they can be used in machine learning algorithms.
-
+The datasets contain many categorical variables that may need to be encoded using techniques such as 
+one-hot encoding or label encoding before they can be used in machine learning algorithms.
 ## View summary statistics of target variable (SalePrice)
 ```{r}
 summary(train$SalePrice)
 ```
 ### Train Sale Price Summary
-According to the summary, the sale price of houses in the training data ranges from $34,900 to $755,000. The median sale price is $163,000, implying that half of the houses sold for less and half sold for more. The median sale price is slightly higher at $180,921, indicating that the price distribution is skewed to the right, with some houses selling for far more than the median. The first quartile sale price is $129,975, indicating that 25% of the houses sold for less, while the third quartile sale price is $214,000, indicating that 75% of the houses sold for less.
+According to the summary, the sale price of houses in the training data ranges from $34,900 to $755,000. 
+The median sale price is $163,000, implying that half of the houses sold for less and half sold for more. 
+The median sale price is slightly higher at $180,921, indicating that the price distribution is skewed to the right,
+with some houses selling for far more than the median. The first quartile sale price is $129,975, 
+indicating that 25% of the houses sold for less, while the third quartile sale price is $214,000, 
+indicating that 75% of the houses sold for less.
 ## Histogram of SalePrice
 ```{r}
 ggplot(train, aes(x = SalePrice)) + 
@@ -63,7 +68,9 @@ ggplot(train, aes(x = SalePrice)) +
   scale_x_continuous(labels = scales::comma)
 ```
 ### Histogram Interpretation
-The ggplot results confirm that the majority of houses in the training data sold for less than $300,000. The histogram shows a peak in frequency around $150,000, which aligns with the median sale price of $163,000. The graph also confirms that the sale price distribution is skewed to the right, as indicated by the summary statistics.
+The ggplot results confirm that the majority of houses in the training data sold for less than $300,000. 
+The histogram shows a peak in frequency around $150,000, which aligns with the median sale price of $163,000. 
+The graph also confirms that the sale price distribution is skewed to the right, as indicated by the summary statistics.
 ## QQ-plot of SalePrice
 ```{r}
 ggplot(train, aes(sample = SalePrice)) +
@@ -75,7 +82,9 @@ ggplot(train, aes(sample = SalePrice)) +
   scale_y_continuous(labels = scales::comma)
 ```
 ### QQ-Plot interpretation
-The qqplot demonstrates that the price distribution deviates from normality. The points deviate from the straight qqline, with the tails deviating significantly. This means that the sale prices of the houses in the dataset are not normally distributed, which can affect the results of any statistical analysis.
+The qqplot demonstrates that the price distribution deviates from normality. The points deviate from the straight qqline, 
+with the tails deviating significantly. This means that the sale prices of the houses in the dataset are not normally distributed, 
+which can affect the results of any statistical analysis.
 ## Log-transform SalePrice
 ```{r}
 train$SalePrice <- log(train$SalePrice)
@@ -88,14 +97,22 @@ train %>%
   ggpairs()
 ```
 ### Scatter Plox Interpretation
-The scatter plots in ggpairs() show the relationship between the selected numeric variables. The diagonal plots show the distribution of each variable. The correlation matrix shows the correlation coefficients between each pair of variables. It seems that SalePrice has a strong positive correlation with OverallQual (OverallQuality) and YearBuilt (Year Built), while it has a moderate positive correlation with LotArea. OverallQual and YearBuilt also show a positive correlation. The OverallCond (Overall Condition) variable shows no clear correlation with any other variable.
+The scatter plots in ggpairs() show the relationship between the selected numeric variables. The diagonal plots show the 
+distribution of each variable. The correlation matrix shows the correlation coefficients between each pair of variables. 
+It seems that SalePrice has a strong positive correlation with OverallQual (OverallQuality) and YearBuilt (Year Built), while 
+it has a moderate positive correlation with LotArea. OverallQual and YearBuilt also show a positive correlation. 
+The OverallCond (Overall Condition) variable shows no clear correlation with any other variable.
 ## Correlation matrix of numerical variables
 ```{r}
 corr_matrix <- cor(train[num_vars])
 corrplot(corr_matrix, method = "circle", type = "upper", tl.col = "black", tl.srt = 45)
 ```
 ### Correlation Matrix interpretation
-The correlation matrix computes the relationship between two numerical variables in the train dataset. The matrix has a value between -1 and 1, with -1 representing a perfect negative correlation, 0 representing no correlation, and 1 representing a perfect positive correlation. The stronger the correlation between the variables, the darker the shade of blue. The plot shows that SalePrice has a strong positive correlation with OverallQual and YearBuilt, but a weak correlation with LotArea and OverallCond.
+The correlation matrix computes the relationship between two numerical variables in the train dataset. 
+The matrix has a value between -1 and 1, with -1 representing a perfect negative correlation, 0 representing no correlation, 
+and 1 representing a perfect positive correlation. The stronger the correlation between the variables, the darker the shade of blue. 
+The plot shows that SalePrice has a strong positive correlation with OverallQual and YearBuilt, 
+but a weak correlation with LotArea and OverallCond.
 
 ## Boxplots of categorical variables
 ```{r}
@@ -109,8 +126,12 @@ train %>%
   theme(legend.position = "bottom")
 ```
 ### Boxplot Inpterpretation
-This code generates boxplots to demonstrate the relationship between the sale price and categorical variables. The categorical variables used are neighborhood, building type, exterior quality, basement quality, and kitchen quality. Each boxplot depicts the price distribution for a specific categorical variable value.
-The boxes show the distribution of sale prices for each category, with the bottom and top of the box representing the first and third quartiles, respectively. The middle line inside the box represents the median. The whiskers extend to 1.5 times the interquartile range (IQR), while the dots beyond the whiskers represent the outliers.
+This code generates boxplots to demonstrate the relationship between the sale price and categorical variables. 
+The categorical variables used are neighborhood, building type, exterior quality, basement quality, and kitchen quality.
+Each boxplot depicts the price distribution for a specific categorical variable value.
+The boxes show the distribution of sale prices for each category, with the bottom and top of the box representing 
+the first and third quartiles, respectively. The middle line inside the box represents the median. 
+The whiskers extend to 1.5 times the interquartile range (IQR), while the dots beyond the whiskers represent the outliers.
 # Data Cleaning and Preprocessing 
 # Combine train and test datasets
 ```{r}
@@ -216,7 +237,9 @@ cor_mat <- cor(train)
 corrplot(cor_mat, method = "color", type = "upper", tl.cex = 0.7)
 ```
 ### Correlation Matrix interpretation
-The correlation matrix indicates the relationship between two numerical variables in the train dataset using a value between -1 and 1. A darker shade of blue suggests a stronger correlation between the variables, with -1 representing a perfect negative correlation, 0 representing no correlation, and 1 representing a perfect positive correlation.
+The correlation matrix indicates the relationship between two numerical variables in the train dataset
+using a value between -1 and 1. A darker shade of blue suggests a stronger correlation between the variables, 
+with -1 representing a perfect negative correlation, 0 representing no correlation, and 1 representing a perfect positive correlation.
 
 # Modeling and Evaluation
 ## Define cross-validation method
